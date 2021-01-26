@@ -1,5 +1,5 @@
 #!/bin/bash
-wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"i
+wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"
 [ "${wwan_blocked}" ] && exit 0
 
 return_3() {
