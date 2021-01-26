@@ -1,0 +1,92 @@
+#!/bin/bash
+
+smsdir="${HOME}/SMS"
+[ ! -d "${smsdir}" ] && mkdir -p "${smsdir}/new"
+
+failed() {
+	echo "FAILED ${1}"
+	exit 1
+}
+
+return_5() {
+	echo ${5}
+}
+
+new() {
+	echo
+	count=0
+	for link in ${smsdir}/new/*; do
+		if [ "${link}" != "${smsdir}/new/*" ]; then
+			(( count++ ))
+			linkb=$(basename "${link}")
+			echo "sender: ${linkb:27} date: $(date -d ${linkb:0:25})"
+			echo -n "text: "
+			cat "${link}"
+			rm "${link}"
+			echo
+		fi
+	done
+	[ "${count}" -eq "0" ] && echo "no new messages!" && echo
+}
+
+send() {
+	num=$(contact getphone "${1}")
+	[ ! "${num}" ] && num="${1}"
+	[ ! -d "${smsdir}/${num}" ] && mkdir "${smsdir}/${num}"
+	sms=$(return_5 $(mmcli -m $(find_modem) --messaging-create-sms="number='${num}',text='${2}'"))
+	mmcli -m $(find_modem) --sms ${sms} --send && \
+		mmcli -m $(find_modem) --messaging-delete-sms ${sms} > /dev/null
+	smsp="${smsdir}/${num}/$(date +%Y-%m-%dT%H:%M:%S%:z)s"
+	echo "${2}" >> ${smsp}
+}
+
+list() {
+	echo -n "${1} "
+	contact getname ${1}
+	[ ! -d "${smsdir}/${1}" ] && failed "contact not found"
+	[ -d "${smsdir}/${1}" ] && for message in ${smsdir}/${1}/*; do
+		echo
+		date=$(basename ${message})
+		[ "${date:25:1}" == "s" ] && echo -n "SENT "
+		[ "${date:25:1}" == "r" ] && echo -n "RECEIVED "
+		echo "$(date -d ${date::-1}) "
+		cat ${message}
+	done
+	echo
+}
+
+help() {
+	echo
+	echo "HELP"
+	echo "allowed options: [new(default when no option given), send, list, help]"
+	echo "new - list new messages"
+	echo "send - send message, eg.: ${0} send +1234567890 hi there \\\`this\\\` \\\`s a sms\!"
+	echo "list - list conversation with contact, eg.: ${0} +1234567890"
+	echo
+	exit 0
+}
+
+[ "${1}" != "new" ] && [ "${1}" != "send" ] && [ "${1}" != "list" ] && [ "${1}" != "help" ] \
+	&& [ "${1}" ] && failed "allowed options: [new, send, list, help]"
+
+[ "${1}" == "help" ] && help
+
+[ "${1}" == "new" ] || [ "${1}" == "" ] && new
+
+if [ "${1}" == "list" ]; then
+	[ ! "${2}" ] && failed "provide contact"
+	num=$(contact getphone "${2}")
+	[ ! "${num}" ] && num="${2}"
+	list ${num}
+fi
+
+if [ "${1}" == "send" ]; then
+	[ ! "${2}" ] || [ ! "${3}" ] && failed "please provide \"contact\" and \"text\""
+	a=${#2}
+	(( a= a + 6 ))
+	A="${@}"
+	send "${2}" "${A:${a}}"
+fi
+
+[ ! "$( ls "${smsdir}/new")" ] && brightnessctl -d green:indicator set 0 > /dev/null
+exit 0

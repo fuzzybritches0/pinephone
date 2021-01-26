@@ -1,0 +1,124 @@
+#!/bin/bash
+contact_dir="${HOME}/CONTACT"
+[ ! -d "${contact_dir}" ] && mkdir -p "${contact_dir}"
+
+show_contact() {
+	if [ ! "$( echo "${2}" | grep " ${1} ")" ]; then
+		cat "${contact_dir}/${1}/name"
+		cat "${contact_dir}/${1}/phone"
+		echo "${1}"
+		echo
+	fi
+}
+
+add_contact() {
+	yesno=n
+	while [ "${yesno}" == "n" ]; do
+		echo "new contact"
+		echo -n "nickname: "; read nickname
+		if [ ! -d "${contact_dir}/${nickname}" ]; then
+			echo -n "name: "; read name
+			echo -n "phone: "; read phone
+			echo -n "correct? Y/n"; read yesno
+		else
+			echo "nickname already taken!"
+		fi
+	done
+	mkdir ${contact_dir}/${nickname}
+	echo "${name}" > "${contact_dir}/${nickname}/name"
+	echo "${phone}" > "${contact_dir}/${nickname}/phone"
+	echo "saved."
+	exit 0
+}
+
+list_contact() {
+	echo
+	for contact in "${contact_dir}"/*; do
+		if [ "${contact}" != "${contact_dir}/*" ]; then
+			contact=$(basename ${contact})
+			show_contact ${contact} "${found}"
+		fi
+	done
+	exit 0
+}
+
+find_contact() {
+	found=" "
+	echo
+	for contact in "${contact_dir}"/*; do
+		if [ "${contact}" != "${contact_dir}/*" ]; then
+			contact=$(basename ${contact})
+			if [ "$( echo "${contact}" | grep "${1}" )" ]; then
+				show_contact ${contact} "${found}"
+				found="${found} ${contact}"
+			fi
+		fi
+	done
+	for contact in "${contact_dir}"/*; do
+		if [ "${contact}" != "${contact_dir}/*" ]; then
+			name=$(cat "${contact}/name")
+			contact=$(basename ${contact})
+			if [ "$(echo "${name,,}" | grep "${1,,}")" ]; then
+				show_contact ${contact} "${found}"
+				found="${found} ${contact}"
+			fi
+		fi
+	done
+	for contact in "${contact_dir}"/*; do
+		if [ "${contact}" != "${contact_dir}/*" ]; then
+			phone=$(cat "${contact}/phone")
+			contact=$(basename ${contact})
+			if [ "${phone}" == "${1}" ]; then
+				show_contact ${contact} "${found}"
+				found="${found} ${contact}"
+			fi
+		fi
+	done
+	[ "${found}" == " " ] && echo "not found"
+	exit 0
+}
+
+get_phone() {
+	if [ -f "${contact_dir}/${1}/phone" ]; then
+		cat "${contact_dir}/${1}/phone"
+		exit 0
+	fi
+	for contact in "${contact_dir}"/*; do
+		if [ "${contact}" != "${contact_dir}/*" ]; then
+			name=$(cat "${contact}/name")
+			if [ "${name,,}" == "${1,,}" ]; then
+				cat "${contact}/phone"
+				exit 0
+			fi
+		fi
+	done
+	echo "${1}"
+	exit 0
+}
+
+get_name() {
+	for contact in "${contact_dir}"/*; do
+		if [ "${contact}" != "${contact_dir}/*" ]; then
+			number=$(cat "${contact}/phone")
+			if [ "${number}" == "${1}" ]; then
+				cat "${contact}/name"
+				exit 0
+			fi
+		fi
+	done
+	echo "${1}"
+	exit 0
+}
+
+
+[ "${1}" == "add" ] && add_contact
+[ "${1}" == "find" ] && find_contact ${2}
+[ "${1}" == "list" ] && list_contact
+[ "${1}" == "getphone" ] && [ "${2}" ] && get_phone "${2}"
+[ "${1}" == "getname" ] && get_name "${2}"
+
+echo "contact help"
+echo
+echo "add a new contact:     ${0} add"
+echo "find a contact entry:  ${0} find nickname/name/phonenumber"
+echo "list contacts:         ${0} list"

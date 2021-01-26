@@ -1,0 +1,10 @@
+#!/bin/bash
+
+return_3() {
+	echo ${3}
+}
+
+state=$( return_3 $(brightnessctl -d white:flash | grep "Current brightness" ) )
+[ "${state}" == "0" ] && brightnessctl -d white:flash s 1 && exit 0
+brightnessctl -d white:flash s 0
+exit 0

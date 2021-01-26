@@ -1,0 +1,17 @@
+#!/bin/bash
+wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"i
+[ "${wwan_blocked}" ] && exit 0
+
+return_3() {
+	echo "${3}"
+}
+
+while [ "$( find_modem )" == "No" ]; do
+	sleep 1s
+done
+
+state=$(return_3 $(mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state))
+[ "${state}" == "disabled" ] && mmcli -m $(find_modem) --enable
+
+dbus_monitor_modem &
+exit 0

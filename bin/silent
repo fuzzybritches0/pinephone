@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -f "${HOME}/.config/notifications_silent" ]; then
+	rm "${HOME}/.config/notifications_silent"
+	echo "notification mode: sound"
+elif [ ! -f "${HOME}/.config/notifications_silent" ]; then
+	touch "${HOME}/.config/notifications_silent"
+	echo "notification mode: silent"
+fi

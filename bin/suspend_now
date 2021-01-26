@@ -1,0 +1,21 @@
+#!/bin/bash
+
+return_2() {
+	echo ${2}
+}
+
+pid="$( pidof -x suspend_now )"
+multi=$( return_2 ${pid} )
+[ "${multi}" ] && exit 0
+state=$( display state )
+if [ "${state}" == "disabled" ]; then
+	lockscreen_xterm &
+	kill -x $(pidof dbus_monitor_modem)
+	kill $(pidof dbus-monitor)
+	brightnessctl -d blue:indicator set 1
+	sleep 1s
+	systemctl suspend
+	ready_modem
+	brightnessctl -d blue:indicator set 0
+fi
+exit 0

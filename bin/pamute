@@ -1,0 +1,27 @@
+#!/bin/bash
+
+return_3() {
+	echo "${3}"
+}
+
+fail() {
+	echo "recognized options: togglemute, togglemutemic"
+	exit 1
+}
+
+[ "${1}" != "togglemute" ] && [ "${1}" != "togglemutemic" ] && [ "${1}" != "init" ] && fail
+
+
+if [ "${1}" == "togglemute" ]; then
+	sink=$(return_3 $(pulsemixer --list-sink | grep ID:\ sink-))
+	sink=${sink/,}
+	pulsemixer --toggle-mute --id ${sink}
+	exit 0
+fi
+
+if [ "${1}" == "togglemutemic" ]; then
+	source=$(return_3 $(pulsemixer --list-source | grep Built-in\ Audio\ Headset\ Microphone))
+	source=${source/,}
+	pulsemixer --toggle-mute --id ${source}
+	exit 0
+fi

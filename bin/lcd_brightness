@@ -1,0 +1,21 @@
+#!/bin/bash
+
+fail() {
+	echo "use + or - to change backlight brightness!"
+	exit 0
+}
+
+max=`brightnessctl m`
+(( onep = max / 100 ))
+current=`brightnessctl g`
+(( currp = current / onep ))
+
+[ "${1}" != "+" ] && [ "${1}" != "-" ] && fail
+
+
+[ "${1}" == "-" ] && [ "${currp}" -ge "10" ] && brightnessctl -n set 5%-
+[ "${1}" == "+" ] && brightnessctl set +5%
+
+current=`brightnessctl g`
+(( currp = current / onep ))
+

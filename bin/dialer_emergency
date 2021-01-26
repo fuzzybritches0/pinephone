@@ -1,0 +1,4 @@
+#!/bin/bash
+printf "\e]0;LockScreen\007"
+echo "EMERGENCY DIALER"
+sleep 5s

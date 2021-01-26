@@ -1,0 +1,140 @@
+#!/bin/bash
+
+voicedir="${HOME}/CALL"
+[ ! -d "${voicedir}" ] && mkdir -p "${voicedir}/new"
+
+return_1() {
+	echo "${1}"
+}
+
+return_4() {
+	echo "${4}"
+}
+
+return_5() {
+	echo "${5}"
+}
+
+call_number() {
+	return_4 $( mmcli -m $(find_modem) --call ${1} | grep number)
+}
+
+prepare_call() {
+	brightnessctl -d green:indicator set 0
+	busctl call --user org.mobian_project.CallAudio /org/mobian_project/CallAudio org.mobian_project.CallAudio SelectMode u 1 > /dev/null
+	proximity &
+}
+
+post_termination() {
+	busctl call --user org.mobian_project.CallAudio /org/mobian_project/CallAudio org.mobian_project.CallAudio SelectMode u 0 > /dev/null
+	kill $(pidof -x proximity)
+	display enable
+}
+
+initiate() {
+	num=$(contact getphone "${1}")
+	[ ! "${num}" ] && num="${1}"
+	callout=$(return_5 $(mmcli -m $(find_modem) --voice-create-call=number="${num}"))
+	call_number=$(call_number ${callout})
+	prepare_call
+	date +%s > "${voicedir}/${2}-${call_number}out"
+	call_started="$(date +%H:%M:%S)"
+	mmcli -m $(find_modem) --call ${callout} --start
+	xterm -font '*-fixed-*-*-*-14-*' -fg white -bg black -e "voice handle ${callout} outgoing ${2}"
+	exit 0
+}
+
+accept() {
+	kill $(pidof -x ring_voice)
+	prepare_call
+	date +%s > "${voicedir}/${2}-${3}in"
+	call_started="$(date +%H:%M:%S)"
+	mmcli -m $(find_modem) --call ${1} --accept
+}
+
+hangup() {
+	mmcli -m $(find_modem) --call ${1} --hangup
+}
+
+monitor() {
+	[ "${2}" == "incoming" ] && ring_voice &
+	display enable
+	while [ ! "$(mmcli -m $(find_modem) --voice-list-calls | grep ${1} | grep terminated)" ]; do
+		sleep 1s
+	done
+	if [ -f "${voicedir}/${3}-${4}${5}" ]; then
+		B="$( cat ${voicedir}/${3}-${4}${5})"
+		E="$(date +%s)"
+		(( secs = E - B ))
+		echo ${secs} > "${voicedir}/${3}-${4}${5}"
+	else
+		touch "${voicedir}/${3}-${4}${5}"
+
+	fi
+	[ "$(pidof -x proximity)" ] && post_termination
+	for process in $( pidof xterm ); do
+		[ "$(cat /proc/${process}/cmdline | grep -a ${1})" ] && kill ${process}
+	done
+}
+
+display_screen() {
+	clear
+	[ "${4}" ] && call_number="${4}"
+	[ "${3}" ] && call_number="${3}"
+	echo "contact: $( contact getname ${call_number}) ${call_number}"
+	echo
+	[ "${3}" == "incoming" ] || [ "${2}" == "incoming" ] && echo "  p          ... pickup"
+	echo "  h          ... hangup/decline"
+	echo "  s          ... silence ringing"
+	echo "  [A-D0-9*#] ... send dtmf sequence [A-D0-9*#]"
+	echo
+	[ "${call_started}" ] && echo "call started at: ${call_started}"
+	echo -n "-->"
+}
+
+send_dtmf() {
+	mmcli -m $(find_modem) --call ${1} --send-dtmf=${2}
+	display_screen ${1} ${2} ${3}
+}
+
+handle() {
+	monitor ${1} ${2} ${3} ${4} ${5} &
+	while :; do
+		input=
+		display_screen ${1} ${dtmfs} ${2} ${4}
+		read -s -n 1 input
+		[ "${2}" == "incoming" ] && [ "${input}" == "p" ] && accept ${1} ${3} ${4}
+		[ "${input}" == "h" ] && hangup ${1}
+		[ "${input}" == "s" ] && kill $( pidof -x ring_voice )
+		[ "${input}" == "0" ] && send_dtmf ${1} "0" ${2} && dtmfs="${dtmfs}0"
+		[ "${input}" == "1" ] && send_dtmf ${1} "1" ${2} && dtmfs="${dtmfs}1"
+		[ "${input}" == "2" ] && send_dtmf ${1} "2" ${2} && dtmfs="${dtmfs}2"
+		[ "${input}" == "3" ] && send_dtmf ${1} "3" ${2} && dtmfs="${dtmfs}3"
+		[ "${input}" == "4" ] && send_dtmf ${1} "4" ${2} && dtmfs="${dtmfs}4"
+		[ "${input}" == "5" ] && send_dtmf ${1} "5" ${2} && dtmfs="${dtmfs}5"
+		[ "${input}" == "6" ] && send_dtmf ${1} "6" ${2} && dtmfs="${dtmfs}6"
+		[ "${input}" == "7" ] && send_dtmf ${1} "7" ${2} && dtmfs="${dtmfs}7"
+		[ "${input}" == "8" ] && send_dtmf ${1} "8" ${2} && dtmfs="${dtmfs}8"
+		[ "${input}" == "9" ] && send_dtmf ${1} "9" ${2} && dtmfs="${dtmfs}9"
+		[ "${input}" == "a" ] && send_dtmf ${1} "A" ${2} && dtmfs="${dtmfs}A"
+		[ "${input}" == "b" ] && send_dtmf ${1} "B" ${2} && dtmfs="${dtmfs}B"
+		[ "${input}" == "c" ] && send_dtmf ${1} "C" ${2} && dtmfs="${dtmfs}C"
+		[ "${input}" == "d" ] && send_dtmf ${1} "D" ${2} && dtmfs="${dtmfs}D"
+		[ "${input}" == "#" ] && send_dtmf ${1} "#" ${2} && dtmfs="${dtmfs}#"
+		[ "${input}" == "*" ] && send_dtmf ${1} "*" ${2} && dtmfs="${dtmfs}*"
+	done
+
+}
+
+[ "${3}" == "incoming" ] && way="in"
+[ "${3}" == "outgoing" ] && way="out"
+[ ! "${4}" ] && call_date="$(date +%Y-%m-%dT%H:%M:%S%:z)" 
+[ "${4}" ] && call_date="${4}" 
+[ "${1}" != "call" ] && [ "${2}" ] && call_number=$(call_number ${2})
+[ "${1}" == "handle" ] && handle "${2}" ${3} ${call_date} ${call_number} ${way}
+[ "${1}" == "call" ] && initiate "${2}" ${call_date}
+
+echo "voice help"
+echo
+echo "call somebody: ${0} call name/nickname/phonenumber"
+exit 0

@@ -1,0 +1,81 @@
+#!/bin/bash
+
+smsdir="${HOME}/SMS"
+[ ! -d "${smsdir}/new" ] && mkdir -p "${smsdir}/new"
+
+return_1() {
+	echo ${1}
+}
+
+save_message() {
+	brightnessctl -d green:indicator set 1
+	count=0
+	timestampP=10
+	text_end=0
+	mmcli -m $(find_modem) --sms ${1} | while read line; do
+	echo "MESSAGE: ${line}" >> ~/dbus_monitor_modem.log
+		[ "${count}" -eq "3" ] && number="${line:24}" && mkdir -p "${smsdir}/${number}"
+		[ "${count}" -eq "4" ] && echo "${line:13}" > "${smsdir}/${number}/tmpfile"
+		if [ "${count}" -gt "4" ]; then
+			if [ "${line}" == "-----------------------" ]; then
+				text_end=1
+			else
+				if [ "${text_end}" -eq "0" ]; then
+					echo "${line:13}" >> "${smsdir}/${number}/tmpfile"
+					(( timestampP++ ))
+				fi
+			fi
+		fi
+		if [ "${count}" -eq "${timestampP}" ]; then
+			timestamp="${line:13}r"
+			mv "${smsdir}/${number}/tmpfile" "${smsdir}/${number}/${timestamp}"
+			ln -sf ${smsdir}/${number}/${timestamp} ${smsdir}/new/${timestamp}_${number}
+		fi
+		(( count++ ))
+	done
+}
+
+process_message() {
+	mmcli -m $(find_modem) --messaging-list-sms | while read line; do
+		if [ "${line}" != "No sms messages were found" ]; then
+			if [ "${line/received}" != "${line}" ]; then
+				ring_message &
+				save_message $(return_1 ${line})
+				mmcli -m $(find_modem) --messaging-delete-sms=$(return_1 ${line})
+			fi
+		fi
+	done
+}
+
+
+process_voice() {
+       mmcli -m $(find_modem) --voice-list-calls | while read call; do
+		if [ "${call}" != "No calls were found" ]; then
+			incoming=$( return_1 $(echo ${call} | grep 'incoming (ringing-in)') )
+			if [ "${incoming}" ]; then
+				lockscreen="$(pidof -x lockscreen_terminal)"
+				brightnessctl -d green:indicator set 1
+				[ "${lockscreen}" ] && kill ${lockscreen}
+				xterm -font '*-fixed-*-*-*-14-*' -fg white -bg black \
+					-e "voice handle ${incoming} incoming"
+				[ "${lockscreen}" ] && lockscreen_xterm
+			fi
+		fi
+	done
+}
+
+messaging="interface=org.freedesktop.ModemManager1.Modem.Messaging"
+voice="interface=org.freedesktop.ModemManager1.Modem.Voice"
+
+process_message
+process_voice
+
+dbus-monitor --system path=/org/freedesktop/ModemManager1/Modem/$(find_modem) | while read line; do
+	echo "MONITOR: ${line}" >> ~/dbus_monitor_modem.log
+	if [ "$(echo ${line} | grep "${messaging}")" ]; then
+		process_message &
+	elif [ "$(echo ${line} | grep "${voice}")" ]; then
+		process_voice &
+	fi
+done
+

@@ -1,0 +1,88 @@
+#!/bin/bash
+failed() {
+	echo "failed ${1}"
+	exit ${2}
+}
+
+return_1() {
+	echo ${1}
+}
+
+return_2() {
+	echo ${2}
+}
+
+pid="$( pidof -x soft_rfkill )"
+multi=$( return_2 ${pid} )
+[ "${multi}" ] && echo "already in progress! wait until last process exits!" && exit 0
+
+[ ! "${1}" ] || [ ! "${2}" ] && \
+	echo "provide identifier: wwan, wireless or bluetooth and action: toggle, block or unblock" &&\
+        echo "like so: ${0} wireless toggle" && exit 1
+
+[ "${1}" != "wireless" ] && [ "${1}" != "bluetooth" ] && [ "${1}" != "wwan" ] && failed ": unknown identifier!" 1
+
+if [ "${1}" == "wwan" ]; then
+	wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"
+	if [ "${2}" == "toggle" ]; then
+		if [ "${wwan_blocked}"  ]; then
+			sudo /usr/bin/systemctl start eg25-manager.service
+			sudo /usr/bin/systemctl enable eg25-manager.service
+			enable_modem
+			exit 0
+		else
+			kill -x $(pidof dbus_monitor_modem)
+			kill $(pidof dbus-monitor)
+			sudo /usr/bin/systemctl stop eg25-manager.service
+			sudo /usr/bin/systemctl disable eg25-manager.service
+			exit 0
+		fi
+	fi
+
+	if [ "${2}" == "block" ]; then
+		[ "${wwan_blocked}"  ] && failed "to block wwan: already blocked" 1
+		kill -x $(pidof dbus_monitor_modem)
+		kill $(pidof dbus-monitor)
+		sudo /usr/bin/systemctl stop eg25-manager.service
+		sudo /usr/bin/systemctl disable eg25-manager.service
+		exit 0
+	fi
+
+	if [ "${2}" == "unblock" ]; then
+		[ ! "${wwan_blocked}"  ] && failed "to unblock wwan: already unblocked" 1
+			sudo /usr/bin/systemctl start eg25-manager.service
+			sudo /usr/bin/systemctl enable eg25-manager.service
+			enable_modem
+		exit 0
+	fi
+fi
+
+
+if [ "${1}" == "wireless" ]; then
+	id=$(return_1 $(/usr/sbin/rfkill list | grep Wireless))
+	id=${id/:}
+fi
+
+
+if [ "${1}" == "bluetooth" ]; then
+	id=$(return_1 $(/usr/sbin/rfkill list | grep Bluetooth))
+	id=${id/:}
+fi
+
+if [ "${2}" == "toggle" ]; then
+	[ "$( /usr/sbin/rfkill list ${id} | grep 'Soft blocked: yes' )" ] && /usr/sbin/rfkill unblock ${id} && exit 0
+	/usr/sbin/rfkill block ${id} && exit 0
+	failed "to toggle ${id}" 1
+fi
+
+if [ "${2}" == "block" ]; then
+	[ "$( /usr/sbin/rfkill list ${id} | grep 'Soft blocked: no' )" ] && /usr/sbin/rfkill block ${id} && exit 0
+	failed "to block ${id}" 1
+fi
+
+if [ "${2}" == "unblock" ]; then
+	[ "$( /usr/sbin/rfkill list ${id} | grep 'Soft blocked: yes' )" ] && /usr/sbin/rfkill unblock ${id} && exit 0
+	failed "to unblock ${id}" 1
+fi
+
+exit 0

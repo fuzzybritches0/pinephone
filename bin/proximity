@@ -1,0 +1,6 @@
+#!/bin/bash
+
+monitor-sensor | while read line; do
+	[ "${line}" == "Proximity value changed: 0" ] && display enable
+	[ "${line}" == "Proximity value changed: 1" ] && display disable
+done

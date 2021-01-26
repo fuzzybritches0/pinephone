@@ -1,0 +1,18 @@
+#!/bin/bash
+
+return_2() {
+	echo ${2}
+}
+
+pid="$( pidof -x display_toggle )"
+multi=$( return_2 ${pid} )
+[ "${multi}" ] && exit 0
+
+state=$( display state )
+[ "${state}" == "disabled" ] && display enable
+if [ "${state}" == "enabled" ]; then
+	lockscreen_xterm &
+	display disable
+fi
+
+exit 0

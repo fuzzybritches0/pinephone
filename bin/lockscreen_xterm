@@ -1,0 +1,2 @@
+#!/bin/bash
+[ ! "$(pidof -x lockscreen_terminal)" ] && xterm -font '*-fixed-*-*-*-14-*' -fg white -bg black -e lockscreen_terminal

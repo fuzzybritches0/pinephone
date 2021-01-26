@@ -1,0 +1,12 @@
+#!/bin/bash
+
+return_3() {
+	echo ${3}
+}
+
+[ "$(find_modem)" == "No" ] && exit 0
+state=$(return_3 $(mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state))
+
+[ "${state}" == "disabled" ] && mmcli -m $(find_modem) --enable && exit 0
+mmcli -m $(find_modem) --disable
+exit 0

@@ -1,0 +1,94 @@
+# Read `man 5 sway` for a complete reference.
+workspace_layout tabbed
+
+output DSI-1 scale 1.6
+
+exec lockscreen_xterm
+exec enable_modem
+exec squeekboard
+exec waybar
+exec waybar -c /home/curtm/.config/waybar/config2
+
+### Variables
+
+#
+# Logo key. Use Mod1 for Alt.
+set $mod Mod1
+# Your preferred terminal emulator
+#set $term xterm -fg white -bg black -fn "xft:Mono:size=9"
+set $term foot
+
+# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
+output * bg /home/curtm/.local/share/wallpaper-image fill
+
+### Idle configuration
+exec swayidle -w timeout 10 'lockscreen_dpms off' resume 'lockscreen_dpms on' \
+	timeout 40 'suspend_now' resume 'display enable'\
+	timeout 120 'display disable' resume 'display enable' \
+	timeout 130 'suspend_now' resume 'display enable' \
+
+# Map all applicable inputs to the phone screen
+input 1046:4097:Goodix_Capacitive_TouchScreen map_to_output DSI-1
+
+### Key bindings
+#
+# Basics:
+#
+    # Start a terminal
+    bindsym $mod+Return exec $term
+
+    # Start the Web Browser
+    bindsym $mod+Backspace exec GDK_BACKEND=wayland firefox-esr
+
+    # Kill focused window
+    bindsym $mod+q kill
+
+    # Start Signal
+    bindsym $mod+y exec flatpak run org.nanuc.Axolotl -e qt
+
+    # Start Telegram
+    bindsym $mod+t exec telegram-desktop
+
+    # Reload the configuration file
+    bindsym $mod+c reload
+
+    # Exit sway (logs you out of your Wayland session)
+    bindsym $mod+End exit
+#
+# Moving around:
+#
+    # Move your focus around
+    bindsym $mod+Left focus left
+    bindsym $mod+Right focus right
+
+# Media keys 
+bindsym XF86AudioRaiseVolume exec pulsemixer --change-volume +5 --max-volume 100
+bindsym XF86AudioLowerVolume exec pulsemixer --change-volume -5 --max-volume 100
+bindsym XF86PowerOff exec display_toggle
+bindsym $mod+m exec pamute togglemutemic
+bindsym $mod+p exec pamute togglemute
+
+
+bindsym $mod+Down exec lcd_brightness -
+bindsym $mod+Up exec lcd_brightness +
+
+bindsym $mod+w exec soft_rfkill wireless toggle
+bindsym $mod+b exec soft_rfkill bluetooth toggle 
+bindsym $mod+x exec soft_rfkill wwan toggle
+
+bindsym $mod+l exec flashlight_toggle
+
+# Screen content orientation
+bindsym $mod+a output DSI-1 transform normal
+bindsym $mod+s output DSI-1 transform 90
+
+# change window title
+for_window [title=".*"] title_format "%title (%app_id%instance)"
+font Mono 6
+
+for_window [title="LockScreen"] fullscreen
+
+# make those x11 apps inhibit_idle when they are fullscreen
+for_window [instance="ffplay"] inhibit_idle visible
+
+include /etc/sway/config.d/*

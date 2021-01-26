@@ -1,0 +1,55 @@
+#!/bin/bash
+
+return_first() {
+	echo "${1}"
+}
+
+return_mute() {
+	[ "${1}" == "1" ] && return_first ${volume}%
+	[ "${1}" == "0" ] && echo "volume: muted"
+}
+
+return_mutemic() {
+	[ "${1}" == "0" ] && echo "mic: unmuted"
+	[ "${1}" == "1" ] && echo "mic: muted"
+}
+
+togglemute() {
+	[ "${1}" == "0" ] && echo 1
+	[ "${1}" == "1" ] && echo 0
+}
+
+fail() {
+	echo "recognized options: +, -, togglemute, togglemutemic, init"
+	exit 1
+}
+
+[ "${1}" != "+" ] && [ "${1}" != "-" ] && [ "${1}" != "togglemute" ] && \
+	[ "${1}" != "togglemutemic" ] && [ "${1}" != "init" ] && fail
+
+mute3=`pulsemixer --get-mute --id sink-3`
+mutemic5=`pulsemixer --get-mute --id source-5`
+mute=`pulsemixer --get-mute`
+volume=$( return_first `pulsemixer --get-volume` )
+
+[ "${volume}" -lt "100" ] && [ "${1}" == "+" ] &&\
+       	pulsemixer --change-volume +5 && (( volume+=5 ))
+[ "${volume}" -gt "0" ] && [ "${1}" == "-" ] &&\
+	pulsemixer --change-volume -5 && (( volume-=5 ))
+[ "${1}" == "togglemute" ] && pulsemixer --toggle-mute && mute3=$( togglemute ${mute3} )
+[ "${1}" == "togglemutemic" ] && pulsemixer --toggle-mute --id source-5 && \
+	mutemic5=$( togglemute ${mutemic5} )
+
+brightnessctl -d platform::micmute s 0
+brightnessctl -d platform::mute s 0
+[ "${mute3}" == "1" ] && brightnessctl -d platform::mute s 1
+[ "${mutemic5}" == "0" ] && brightnessctl -d platform::micmute s 1
+
+[ "$(pidof aosd_cat)" ] && kill $(pidof aosd_cat)
+[ "${1}" == "+" ] || [ "${1}" == "-" ] && echo "volume: $( return_first ${volume}% )" |\
+       	aosd_cat -p 4 --font="Mono bold 30"  -R white
+[ "${1}" == "togglemute" ] && return_mute ${mute} |\
+       	aosd_cat -p 4 --font="Mono bold 30"  -R white
+[ "${1}" == "togglemutemic" ] && return_mutemic ${mutemic5} |\
+       	aosd_cat -p 4 --font="Mono bold 30"  -R white
+

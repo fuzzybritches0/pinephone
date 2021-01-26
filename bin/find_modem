@@ -1,0 +1,9 @@
+#!/bin/bash
+
+return_1() {
+	echo "${1}"
+}
+
+modem=$(mmcli -L)
+return_1 ${modem/\/org\/freedesktop\/ModemManager1\/Modem\/}
+

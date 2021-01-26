@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ "${1}" == "state" ]; then
+	state=$( swaymsg -t get_inputs | grep -A 5 "Goodix Capacitive TouchScreen" |
+		grep send_events | grep enabled )
+	[ "${state}" ] && echo enabled && exit 0
+	echo disabled && exit 0
+fi
+
+if [ "${1}" == "disable" ]; then
+	swaymsg "output DSI-1 dpms off"
+	swaymsg "input 1046:4097:Goodix_Capacitive_TouchScreen events disabled"
+	exit 0
+fi
+
+if [ "${1}" == "enable" ]; then
+	swaymsg "output DSI-1 dpms on"
+	swaymsg "input 1046:4097:Goodix_Capacitive_TouchScreen events enabled"
+	exit 0
+fi
