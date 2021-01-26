@@ -28,7 +28,7 @@ if [ "${1}" == "wwan" ]; then
 		if [ "${wwan_blocked}"  ]; then
 			sudo /usr/bin/systemctl start eg25-manager.service
 			sudo /usr/bin/systemctl enable eg25-manager.service
-			enable_modem
+			ready_modem
 			exit 0
 		else
 			kill -x $(pidof dbus_monitor_modem)
@@ -41,8 +41,8 @@ if [ "${1}" == "wwan" ]; then
 
 	if [ "${2}" == "block" ]; then
 		[ "${wwan_blocked}"  ] && failed "to block wwan: already blocked" 1
-		kill -x $(pidof dbus_monitor_modem)
-		kill $(pidof dbus-monitor)
+		[ "$(pidof -x dbus_monitor_modem)" ] && kill $(pidof -x dbus_monitor_modem)
+		[ "$(pidof dbus-monitor)" ] && kill $(pidof dbus-monitor)
 		sudo /usr/bin/systemctl stop eg25-manager.service
 		sudo /usr/bin/systemctl disable eg25-manager.service
 		exit 0
@@ -52,7 +52,7 @@ if [ "${1}" == "wwan" ]; then
 		[ ! "${wwan_blocked}"  ] && failed "to unblock wwan: already unblocked" 1
 			sudo /usr/bin/systemctl start eg25-manager.service
 			sudo /usr/bin/systemctl enable eg25-manager.service
-			enable_modem
+			ready_modem
 		exit 0
 	fi
 fi

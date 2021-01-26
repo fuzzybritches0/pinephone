@@ -4,7 +4,7 @@ workspace_layout tabbed
 output DSI-1 scale 1.6
 
 exec lockscreen_xterm
-exec enable_modem
+exec ready_modem
 exec squeekboard
 exec waybar
 exec waybar -c /home/curtm/.config/waybar/config2

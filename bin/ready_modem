@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# enter the pin of your sim card below
+#pin=1234
+
+[ ! "${pin}" ] && echo "No pin set!" && exit 1
+
 wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"
 [ "${wwan_blocked}" ] && exit 0
 
@@ -10,8 +16,14 @@ while [ "$( find_modem )" == "No" ]; do
 	sleep 1s
 done
 
-state=$(return_3 $(mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state))
-[ "${state}" == "disabled" ] && mmcli -m $(find_modem) --enable
+unlock=$( return_3 $( mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.unlock-required ) )
+[ "${unlock}" == "sim-pin" ] && mmcli -i $(find_modem) --pin=${pin}
 
+state=$( return_3 $( mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state ) )
+while [ "${state}" != "registered" ] && [ "${state}" != "enabled" ]; do
+	mmcli -m $(find_modem) --enable
+	sleep 1s
+	state=$( return_3 $( mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state ) )
+done
 dbus_monitor_modem &
 exit 0

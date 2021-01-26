@@ -27,6 +27,8 @@ inspect the sway config file and change it to your liking.
 
 the Ringtones folder needs to be in your $HOME folder.
 
+edit the file bin/ready_modem and add your pin for the sim card.
+
 add a new contact:
 	$ contact add
 		nickname: max
