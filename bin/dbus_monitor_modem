@@ -8,7 +8,7 @@ return_1() {
 }
 
 save_message() {
-	brightnessctl -d green:indicator set 1
+	brightnessctl -q -d green:indicator set 1
 	count=0
 	timestampP=10
 	text_end=0
@@ -54,7 +54,7 @@ process_voice() {
 			incoming=$( return_1 $(echo ${call} | grep 'incoming (ringing-in)') )
 			if [ "${incoming}" ]; then
 				lockscreen="$(pidof -x lockscreen_terminal)"
-				brightnessctl -d green:indicator set 1
+				brightnessctl -q -d green:indicator set 1
 				[ "${lockscreen}" ] && kill ${lockscreen}
 				xterm -font '*-fixed-*-*-*-14-*' -fg white -bg black \
 					-e "voice handle ${incoming} incoming"

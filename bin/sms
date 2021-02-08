@@ -88,5 +88,5 @@ if [ "${1}" == "send" ]; then
 	send "${2}" "${A:${a}}"
 fi
 
-[ ! "$( ls "${smsdir}/new")" ] && brightnessctl -d green:indicator set 0 > /dev/null
+[ ! "$( ls "${smsdir}/new")" ] && brightnessctl -q -d green:indicator set 0 > /dev/null
 exit 0
