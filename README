@@ -25,13 +25,19 @@ the Ringtones folder needs to be in your $HOME folder.
 
 add a new contact:
 
-$ contact add nickname: max
+$ contact add
+
+nickname: max
 name: max musterman
 telephone: +1234567890
 
-call max: $ voice call max
+call max:
 
-call someone by phone number: $ voice call +1234567890
+$ voice call max
+
+call someone by phone number:
+
+$ voice call +1234567890
 
 send max an sms:
 
