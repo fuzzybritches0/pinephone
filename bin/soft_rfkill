@@ -23,18 +23,13 @@ multi=$( return_2 ${pid} )
 [ "${1}" != "wireless" ] && [ "${1}" != "bluetooth" ] && [ "${1}" != "wwan" ] && failed ": unknown identifier!" 1
 
 if [ "${1}" == "wwan" ]; then
-	wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"
+	wwan_blocked="$(mmcli -m any --output-keyvalue | grep modem.generic.state  | grep disabled)"
 	if [ "${2}" == "toggle" ]; then
 		if [ "${wwan_blocked}"  ]; then
-			sudo /usr/bin/systemctl start eg25-manager.service
-			sudo /usr/bin/systemctl enable eg25-manager.service
-			ready_modem
+			mmcli -m any --enable
 			exit 0
 		else
-			kill -x $(pidof dbus_monitor_modem)
-			kill $(pidof dbus-monitor)
-			sudo /usr/bin/systemctl stop eg25-manager.service
-			sudo /usr/bin/systemctl disable eg25-manager.service
+			mmcli -m any --disable
 			exit 0
 		fi
 	fi
@@ -43,16 +38,13 @@ if [ "${1}" == "wwan" ]; then
 		[ "${wwan_blocked}"  ] && failed "to block wwan: already blocked" 1
 		[ "$(pidof -x dbus_monitor_modem)" ] && kill $(pidof -x dbus_monitor_modem)
 		[ "$(pidof dbus-monitor)" ] && kill $(pidof dbus-monitor)
-		sudo /usr/bin/systemctl stop eg25-manager.service
-		sudo /usr/bin/systemctl disable eg25-manager.service
+			mmcli -m any --disable
 		exit 0
 	fi
 
 	if [ "${2}" == "unblock" ]; then
 		[ ! "${wwan_blocked}"  ] && failed "to unblock wwan: already unblocked" 1
-			sudo /usr/bin/systemctl start eg25-manager.service
-			sudo /usr/bin/systemctl enable eg25-manager.service
-			ready_modem
+			mmcli -m any --enable
 		exit 0
 	fi
 fi
