@@ -1,14 +1,9 @@
 #!/bin/bash
 
-if [ ! "$(pidof squeekboard)" ]; then
-	squeekboard &
-	busctl call --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b true
+if [ ! "$(pidof wvkbd-mobintl)" ]; then
+	wvkbd-mobintl &
 	exit 0
+else
+	kill $(pidof wvkbd-mobintl)
 fi
 
-visible="$(busctl get-property --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 Visible)"
-if [ "${visible}" == "b true" ]; then
-	busctl call --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b false
-else
-	busctl call --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b true
-fi
