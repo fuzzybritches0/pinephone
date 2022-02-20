@@ -16,7 +16,7 @@ return_5() {
 }
 
 call_number() {
-	return_4 $( mmcli -m $(find_modem) --call ${1} | grep number)
+	return_4 $( mmcli -m any --call ${1} | grep number)
 }
 
 prepare_call() {
@@ -34,13 +34,13 @@ post_termination() {
 initiate() {
 	num=$(contact getphone "${1}")
 	[ ! "${num}" ] && num="${1}"
-	callout=$(return_5 $(mmcli -m $(find_modem) --voice-create-call=number="${num}"))
+	callout=$(return_5 $(mmcli -m any --voice-create-call=number="${num}"))
 	call_number=$(call_number ${callout})
 	prepare_call
 	date +%s > "${voicedir}/${2}-${call_number}out"
 	call_started="$(date +%H:%M:%S)"
-	mmcli -m $(find_modem) --call ${callout} --start
-	xterm -font '*-fixed-*-*-*-14-*' -fg white -bg black -e "voice handle ${callout} outgoing ${2}"
+	mmcli -m any --call ${callout} --start
+	voice handle ${callout} outgoing ${2}
 	exit 0
 }
 
@@ -49,17 +49,17 @@ accept() {
 	prepare_call
 	date +%s > "${voicedir}/${2}-${3}in"
 	call_started="$(date +%H:%M:%S)"
-	mmcli -m $(find_modem) --call ${1} --accept
+	mmcli -m any --call ${1} --accept
 }
 
 hangup() {
-	mmcli -m $(find_modem) --call ${1} --hangup
+	mmcli -m any --call ${1} --hangup
 }
 
 monitor() {
 	[ "${2}" == "incoming" ] && ring_voice &
 	display enable
-	while [ ! "$(mmcli -m $(find_modem) --voice-list-calls | grep ${1} | grep terminated)" ]; do
+	while [ ! "$(mmcli -m any --voice-list-calls | grep ${1} | grep terminated)" ]; do
 		sleep 1s
 	done
 	if [ -f "${voicedir}/${3}-${4}${5}" ]; then
@@ -72,9 +72,8 @@ monitor() {
 
 	fi
 	[ "$(pidof -x proximity)" ] && post_termination
-	for process in $( pidof xterm ); do
-		[ "$(cat /proc/${process}/cmdline | grep -a ${1})" ] && kill ${process}
-	done
+	killall voice
+	exit 0
 }
 
 display_screen() {
@@ -93,16 +92,17 @@ display_screen() {
 }
 
 send_dtmf() {
-	mmcli -m $(find_modem) --call ${1} --send-dtmf=${2}
+	mmcli -m any --call ${1} --send-dtmf=${2}
 	display_screen ${1} ${2} ${3}
 }
 
 handle() {
 	monitor ${1} ${2} ${3} ${4} ${5} &
-	while :; do
+	while [ ! "$(mmcli -m any --voice-list-calls | grep ${1} | grep terminated)" ]; do
 		input=
 		display_screen ${1} ${dtmfs} ${2} ${4}
 		read -s -n 1 input
+		[ "$(mmcli -m any --voice-list-calls | grep ${1} | grep terminated)" ] && exit 0
 		[ "${2}" == "incoming" ] && [ "${input}" == "p" ] && accept ${1} ${3} ${4}
 		[ "${input}" == "h" ] && hangup ${1}
 		[ "${input}" == "s" ] && kill $( pidof -x ring_voice )
@@ -123,7 +123,7 @@ handle() {
 		[ "${input}" == "#" ] && send_dtmf ${1} "#" ${2} && dtmfs="${dtmfs}#"
 		[ "${input}" == "*" ] && send_dtmf ${1} "*" ${2} && dtmfs="${dtmfs}*"
 	done
-
+	exit 0
 }
 
 [ "${3}" == "incoming" ] && way="in"
