@@ -1,8 +1,8 @@
 #!/bin/bash
 
-wavefile="message.raw"
+wavefile="message.wav"
 
 [ -f "${HOME}/.config/notifications_silent" ] && exit 0
 
-paplay --raw ${HOME}/Ringtones/${wavefile}
+paplay ${HOME}/Ringtones/${wavefile}
 exit 0

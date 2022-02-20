@@ -1,15 +1,15 @@
 #!/bin/bash
 
-wavefile="voice.raw"
+wavefile="ring.wav"
 
 [ -f "${HOME}/.config/notifications_silent" ] && exit 0
 
-paplay --raw ${HOME}/Ringtones/${wavefile}
+paplay ${HOME}/Ringtones/${wavefile}
 sleep 3s
-paplay --raw ${HOME}/Ringtones/${wavefile}
+paplay ${HOME}/Ringtones/${wavefile}
 sleep 3s
-paplay --raw ${HOME}/Ringtones/${wavefile}
+paplay ${HOME}/Ringtones/${wavefile}
 sleep 3s
-paplay --raw ${HOME}/Ringtones/${wavefile}
+paplay ${HOME}/Ringtones/${wavefile}
 
 exit 0
