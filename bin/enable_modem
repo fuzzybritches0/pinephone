@@ -1,0 +1,22 @@
+#!/bin/bash
+
+return_3() {
+	echo "${3}"
+}
+
+countdown() {
+	sleep .1s
+	((count++))
+	if ((count > 600)); then
+		echo "ERROR: ${1}"
+		echo "giving up!"
+		exit 1
+	fi
+}
+
+count=0
+while [ "${state}" != "registered" ] && [ "${state}" != "enabled" ]; do
+	mmcli -m $(find_modem) --enable
+	countdown "failed to enable modem!"
+	state=$(return_3 $(mmcli -m $(find_modem) --output-keyvalue | grep "modem.generic.state "))
+done
