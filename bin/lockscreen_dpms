@@ -1,5 +1,0 @@
-#!/bin/bash
-
-[ "$(pidof -x lockscreen_terminal)" ] && [ "${1}" == "off" ] && display disable
-[ "$(pidof -x lockscreen_terminal)" ] && [ "${1}" == "on" ] && display enable
-exit 0
