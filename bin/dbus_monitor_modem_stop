@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[ "$(pidof -x dbus_monitor_modem)" ] && kill $(pidof -x dbus_monitor_modem)
+exit 0
+

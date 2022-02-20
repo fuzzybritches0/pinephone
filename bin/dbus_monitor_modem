@@ -4,6 +4,25 @@ return_1() {
 	echo ${1}
 }
 
+countdown() {
+	sleep 1s
+	((count++))
+	if ((count > 60)); then
+		echo "ERROR: ${1}"
+		echo "giving up!"
+		exit 1
+	fi
+}
+
+at_exit() {
+	for pid in $(pidof dbus-monitor); do
+		[ "$(cat /proc/${pid}/cmdline | tr "\0" " " |\
+			grep -a /org/freedesktop/ModemManager1/Modem/)" ] &&\
+			kill ${pid}
+	done
+	exit 0
+}
+
 save_message() {
 	brightnessctl -q -d green:indicator set 1
 	count=0
@@ -57,6 +76,8 @@ process_voice() {
 	done
 }
 
+trap at_exit EXIT SIGINT
+
 smsdir="${HOME}/SMS"
 [ ! -d "${smsdir}/new" ] && mkdir -p "${smsdir}/new"
 
@@ -64,12 +85,10 @@ messaging="interface=org.freedesktop.ModemManager1.Modem.Messaging"
 voice="interface=org.freedesktop.ModemManager1.Modem.Voice"
 
 while [ ! "$(find_modem)" ]; do
-	sleep 1s
+	countdown "no modem found!"
 done
 
-modem="$(find_modem)"
-
-dbus-monitor --system path=${modem} | while read line; do
+dbus-monitor --system path=$(find_modem) | while read line; do
 	echo "MONITOR: ${line}" >> ~/dbus_monitor_modem.log
 	if [ "$(echo ${line} | grep "${messaging}")" ]; then
 		process_message &
@@ -77,4 +96,3 @@ dbus-monitor --system path=${modem} | while read line; do
 		process_voice &
 	fi
 done
-
