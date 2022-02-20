@@ -1,55 +1,50 @@
 Pinephone bash Scripts for SMS, VOICE-CALL and more
 
 
-besides needing a basic mobian installation the following packages need to be installed to have things work: sway, waybar, swayidle, modemmanager, callaudiod, xterm, squeekboard, pulseaudio, mobian-pinephone-tweaks, brightnessctl, (consolation), eg25-manager, foot, ...
+Beside needing a basic mobian installation the following packages need to be
+installed to have things work: sway, swayidle, modemmanager,
+callaudiod, foot, wvkbd*, pulseaudio, mobian-pinephone-tweaks,
+brightnessctl, eg25-manager, lisgd**, wofi***, ...
+
+*   https://github.com/fuzzybritches0/wvkbd/tree/fuzzybritches0
+**  https://github.com/fuzzybritches0/lisgd/tree/debian
+*** https://github.com/fuzzybritches0/wofi/tree/debian 
 
 remember that network-managaer needs to be replaced with iwd: 
 
-	$ apt-cache purge network-manager
-	$ apt-cache install iwd
+$ apt-cache install iwd
 
-add the following two lines to /etc/sudoers (use $ sudo visudo ):
+$ apt-cache purge network-manager 
 
-mobian ALL=(ALL) NOPASSWD:/usr/bin/systemctl stop eg25-manager.service, /usr/bin/systemctl start eg25-manager.service
-mobian ALL=(ALL) NOPASSWD:/usr/bin/systemctl disable eg25-manager.service, /usr/bin/systemctl enable eg25-manager.service
+copy all files in bin/* into a path where they can be found and executed
+($PATH).
 
-if your username is not mobian change mobian to your username
-
-make sure you are a member of the group input:
-
-	$ adduser mobian input
-
-copy all files in bin/* into a path where they can be found and executed ($PATH).
-
-copy all directories in config to .config in your home folder.
-
-inspect the sway config file and change it to your liking.
+copy sway config into $HOME/.config/sway
 
 the Ringtones folder needs to be in your $HOME folder.
 
-edit the file bin/ready_modem and add your pin for the sim card.
-
 add a new contact:
-	$ contact add
-		nickname: max
-		name: max musterman
-		telephone: +1234567890
 
-call max:
-	$ voice call max
+$ contact add nickname: max
+name: max musterman
+telephone: +1234567890
 
-call someone by phone number:
-	$ voice call +1234567890
+call max: $ voice call max
+
+call someone by phone number: $ voice call +1234567890
 
 send max an sms:
-	$ sms send max hi there this is an sms\!
+
+$ sms send max hi there this is an sms\!
 
 check new sms:
-	$ sms
+
+$ sms
 
 list conversation with max:
-	$ sms list max
 
-calls and missed calls get saved in ~/CALLS/*, however a human readable function is not yet implemented.
-	$ call
+$ sms list max
+
+calls and missed calls get saved in ~/CALLS/*, however a human readable
+function is not implemented yet.
 
