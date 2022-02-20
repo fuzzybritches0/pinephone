@@ -4,18 +4,17 @@ return_2() {
 	echo ${2}
 }
 
+
 pid="$( pidof -x suspend_now )"
 multi=$( return_2 ${pid} )
 [ "${multi}" ] && exit 0
 state=$( display state )
 if [ "${state}" == "disabled" ]; then
-	lockscreen_xterm &
-	kill -x $(pidof dbus_monitor_modem)
-	kill $(pidof dbus-monitor)
+	[ -f "${HOME}/.config/nosleep" ] && exit 0
 	brightnessctl -d blue:indicator set 1
 	sleep 1s
 	systemctl suspend
-	ready_modem
+	foot -T foot-float ready_modem
 	brightnessctl -d blue:indicator set 0
 fi
 exit 0
