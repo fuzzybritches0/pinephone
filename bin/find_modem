@@ -4,6 +4,7 @@ return_1() {
 	echo "${1}"
 }
 
-modem=$(mmcli -L)
-return_1 ${modem/\/org\/freedesktop\/ModemManager1\/Modem\/}
+modem=$(mmcli -L 2> /dev/null)
+[ "${modem}" == "No modems were found" ] && exit 0
+return_1 ${modem}
 

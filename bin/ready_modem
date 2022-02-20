@@ -1,29 +1,59 @@
 #!/bin/bash
 
-# enter the pin of your sim card below
-#pin=1234
-
-[ ! "${pin}" ] && echo "No pin set!" && exit 1
-
-wwan_blocked="$(systemctl status eg25-manager.service | grep "Active: inactive")"
-[ "${wwan_blocked}" ] && exit 0
+return_4() {
+	echo "${4}"
+}
 
 return_3() {
 	echo "${3}"
 }
 
-while [ "$( find_modem )" == "No" ]; do
+countdown() {
 	sleep 1s
+	((count++))
+	if ((count > 60)); then
+		echo "ERROR: ${1}"
+		echo "giving up!"
+		exit 1
+	fi
+}
+
+count=0
+while [ ! "$(find_modem)" ]; do
+	countdown "no modem found!"
 done
 
-unlock=$( return_3 $( mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.unlock-required ) )
-[ "${unlock}" == "sim-pin" ] && mmcli -i $(find_modem) --pin=${pin}
+unlock=$(return_3 $(mmcli -m any --output-keyvalue | grep modem.generic.unlock-required))
+while [ "${unlock}" == "sim-pin" ] || [ "${unlock}" == "sim-puk" ]; do
+	[ "${unlock}" == "sim-pin" ] &&\
+		retry=$(return_4 $( mmcli -m any --output-keyvalue | grep "modem.generic.unlock-retries.value\[1\]"))
+	[ "${unlock}" == "sim-puk" ] &&\
+		retry=$(return_4 $( mmcli -m any --output-keyvalue | grep "modem.generic.unlock-retries.value\[2\]"))
+	echo -n "Enter ${unlock:4:3} (retries ${retry:1}: "
+	read pinpuk
+	mmcli -i any --${unlock:4:3}=${pinpuk}
+	unlock=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.unlock-required ) )
+done
 
-state=$( return_3 $( mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state ) )
+state=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.state ) )
+count=0
+while [ "${state}" == "initializing" ]; do
+	countdown "initialization failed!"
+	state=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.state ) )
+done
+
+if [ "${state}" != "registered" ] && [ "${state}" != "enabled" ]; then
+	if ! mmcli -m any --enable; then
+		echo "enabling modem failed!"
+		exit 1
+	fi
+fi
+
+count=0
 while [ "${state}" != "registered" ] && [ "${state}" != "enabled" ]; do
-	mmcli -m $(find_modem) --enable
-	sleep 1s
-	state=$( return_3 $( mmcli -m $(find_modem) --output-keyvalue | grep modem.generic.state ) )
+	countdown "enabling modem failed!"
+	state=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.state ) )
 done
-dbus_monitor_modem &
+
 exit 0
+
