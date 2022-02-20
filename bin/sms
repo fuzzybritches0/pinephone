@@ -33,9 +33,9 @@ send() {
 	num=$(contact getphone "${1}")
 	[ ! "${num}" ] && num="${1}"
 	[ ! -d "${smsdir}/${num}" ] && mkdir "${smsdir}/${num}"
-	sms=$(return_5 $(mmcli -m $(find_modem) --messaging-create-sms="number='${num}',text='${2}'"))
-	mmcli -m $(find_modem) --sms ${sms} --send && \
-		mmcli -m $(find_modem) --messaging-delete-sms ${sms} > /dev/null
+	sms=$(return_5 $(mmcli -m any --messaging-create-sms="number='${num}',text='${2}'"))
+	mmcli -m any --sms ${sms} --send && \
+		mmcli -m any --messaging-delete-sms ${sms} > /dev/null
 	smsp="${smsdir}/${num}/$(date +%Y-%m-%dT%H:%M:%S%:z)s"
 	echo "${2}" >> ${smsp}
 }
