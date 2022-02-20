@@ -23,13 +23,13 @@ multi=$( return_2 ${pid} )
 [ "${1}" != "wireless" ] && [ "${1}" != "bluetooth" ] && [ "${1}" != "wwan" ] && failed ": unknown identifier!" 1
 
 if [ "${1}" == "wwan" ]; then
-	wwan_blocked="$(mmcli -m any --output-keyvalue | grep modem.generic.state  | grep disabled)"
+	wwan_blocked="$(mmcli -m any --output-keyvalue | grep "modem.generic.state " | grep disabled)"
 	if [ "${2}" == "toggle" ]; then
 		if [ "${wwan_blocked}"  ]; then
-			mmcli -m any --enable
+			mmcli -m any --enable && rm -f "${HOME}/.config/modem_disabled"
 			exit 0
 		else
-			mmcli -m any --disable
+			mmcli -m any --disable && touch "${HOME}/.config/modem_disabled"
 			exit 0
 		fi
 	fi
@@ -38,13 +38,13 @@ if [ "${1}" == "wwan" ]; then
 		[ "${wwan_blocked}"  ] && failed "to block wwan: already blocked" 1
 		[ "$(pidof -x dbus_monitor_modem)" ] && kill $(pidof -x dbus_monitor_modem)
 		[ "$(pidof dbus-monitor)" ] && kill $(pidof dbus-monitor)
-			mmcli -m any --disable
+			mmcli -m any --disable && touch "${HOME}/.config/modem_disabled"
 		exit 0
 	fi
 
 	if [ "${2}" == "unblock" ]; then
 		[ ! "${wwan_blocked}"  ] && failed "to unblock wwan: already unblocked" 1
-			mmcli -m any --enable
+			mmcli -m any --enable && rm -f "${HOME}/.config/modem_disabled"
 		exit 0
 	fi
 fi
