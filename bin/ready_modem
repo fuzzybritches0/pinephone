@@ -32,28 +32,15 @@ while [ "${unlock}" == "sim-pin" ] || [ "${unlock}" == "sim-puk" ]; do
 	echo -n "Enter ${unlock:4:3} (retries ${retry:1}: "
 	read pinpuk
 	mmcli -i any --${unlock:4:3}=${pinpuk}
-	unlock=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.unlock-required ) )
+	unlock=$(return_3 $(mmcli -m any --output-keyvalue | grep modem.generic.unlock-required ))
 done
 
-state=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.state ) )
+state=$(return_3 $(mmcli -m any --output-keyvalue | grep "modem.generic.state "))
 count=0
 while [ "${state}" == "initializing" ]; do
 	countdown "initialization failed!"
-	state=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.state ) )
+	state=$(return_3 $( mmcli -m any --output-keyvalue | grep "modem.generic.state "))
 done
 
-if [ "${state}" != "registered" ] && [ "${state}" != "enabled" ]; then
-	if ! mmcli -m any --enable; then
-		echo "enabling modem failed!"
-		exit 1
-	fi
-fi
-
-count=0
-while [ "${state}" != "registered" ] && [ "${state}" != "enabled" ]; do
-	countdown "enabling modem failed!"
-	state=$( return_3 $( mmcli -m any --output-keyvalue | grep modem.generic.state ) )
-done
-
+[ ! -f "${HOME}/.config/modem_disabled" ] && mmcli -m any --enable || exit ${?}
 exit 0
-
