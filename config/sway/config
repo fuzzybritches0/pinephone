@@ -3,10 +3,10 @@ default_border pixel 2
 
 workspace_layout tabbed
 
-output DSI-1 scale 2
+output DSI-1 scale 1.8
 
-exec foot -T foot-float ready_modem
 exec dbus_monitor_modem
+exec foot -T foot-float ready_modem
 exec lisgd
 
 ### Variables
