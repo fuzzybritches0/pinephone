@@ -1,0 +1,17 @@
+#!/bin/bash
+
+count=0
+while [ ! "/run/user/${UID}/sway-ipc.${UID}.*.sock" == "/run/user/${UID}/sway-ipc.${UID}.*.sock" ]; do
+	((count++))
+	((count >= 30)) && exit 0
+	sleep 1s
+done
+
+[ ! "${SWAYSOCK}" ] && export SWAYSOCK=$(ls /run/user/${UID}/sway-ipc.${UID}.*.sock)
+[ ! "${WAYLAND_DISPLAY}" ] && export WAYLAND_DISPLAY="$(basename /run/user/${UID}/wayland-?)"
+
+while true; do
+	wtype -M alt -M shift -M ctrl w
+	sleep 10s
+done
+

@@ -90,6 +90,8 @@ bar {
     }
 }
 
+bindsym $mod+Shift+Ctrl+w exec nop
+
 for_window [title="foot-float"] floating true
 
 include /etc/sway/config.d/*
