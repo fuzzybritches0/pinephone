@@ -1,9 +1,10 @@
 #!/bin/bash
 
 count=0
-while [ ! "/run/user/${UID}/sway-ipc.${UID}.*.sock" == "/run/user/${UID}/sway-ipc.${UID}.*.sock" ]; do
+while true; do
+	[ "$(ls /run/user/${UID} | grep sway-ipc.${UID}.)" ] && break
 	((count++))
-	((count >= 30)) && exit 0
+	((count >= 10)) && exit 0
 	sleep 1s
 done
 
