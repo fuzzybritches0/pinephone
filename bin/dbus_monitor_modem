@@ -88,6 +88,9 @@ while [ ! "$(find_modem)" ]; do
 	countdown "no modem found!"
 done
 
+process_message
+process_voice
+
 dbus-monitor --system path=$(find_modem) | while read line; do
 	echo "MONITOR: ${line}" >> ~/dbus_monitor_modem.log
 	if [ "$(echo ${line} | grep "${messaging}")" ]; then
