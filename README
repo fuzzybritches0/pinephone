@@ -4,7 +4,7 @@ Pinephone bash Scripts for SMS, VOICE-CALL and more
 Beside needing a basic mobian installation the following packages need to be
 installed to have things work: sway, swayidle, modemmanager,
 callaudiod, foot, wvkbd*, pulseaudio, mobian-pinephone-tweaks,
-brightnessctl, eg25-manager, lisgd**, wofi***, ...
+brightnessctl, eg25-manager, lisgd**, wofi***, wtype, ...
 
 *   https://github.com/fuzzybritches0/wvkbd/tree/fuzzybritches0
 **  https://github.com/fuzzybritches0/lisgd/tree/debian
