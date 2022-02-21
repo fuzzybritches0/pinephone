@@ -5,9 +5,9 @@ return_3() {
 }
 
 countdown() {
-	sleep .1s
+	sleep 1s
 	((count++))
-	if ((count > 600)); then
+	if ((count > 60)); then
 		echo "ERROR: ${1}"
 		echo "giving up!"
 		exit 1
