@@ -20,6 +20,8 @@ call_number() {
 }
 
 prepare_call() {
+	inhibit_idle &
+	ii=${!}
 	brightnessctl -q -d green:indicator set 0
 	busctl call --user org.mobian_project.CallAudio /org/mobian_project/CallAudio org.mobian_project.CallAudio SelectMode u 1 > /dev/null
 	proximity &
@@ -28,6 +30,7 @@ prepare_call() {
 post_termination() {
 	busctl call --user org.mobian_project.CallAudio /org/mobian_project/CallAudio org.mobian_project.CallAudio SelectMode u 0 > /dev/null
 	kill $(pidof -x proximity)
+	kill ${ii}
 	display enable
 }
 

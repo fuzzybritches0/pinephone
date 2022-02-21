@@ -4,19 +4,17 @@ return_2() {
 	echo ${2}
 }
 
-[ "$(pidof -x voice)" ] && exit 0
-
 pid="$(pidof -x suspend_now)"
 multi="$(return_2 ${pid})"
 [ "${multi}" ] && exit 0
 
 state="$(display state)"
 if [ "${state}" == "disabled" ]; then
-	[ -f "${HOME}/.config/nosleep" ] && exit 0
 	brightnessctl -d blue:indicator set 1
 	sleep 1s
 	dbus_monitor_modem_stop
 	systemctl suspend
+	wtype -M alt -M shift -M ctrl w
 	[ ! -f "${HOME}/.config/modem_disabled" ] && enable_modem
 	dbus_monitor_modem &
 	brightnessctl -d blue:indicator set 0
