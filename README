@@ -54,3 +54,12 @@ $ sms list max
 calls and missed calls get saved in ~/CALLS/*, however a human readable
 function is not implemented yet.
 
+to prevent the phone from suspending while being logged in via ssh, add
+the following lines at the end of your .bashrc (note the path to
+inhibit_idle may differ in your case). (turn off the screen by pressing
+the power button):
+
+if [ "${SSH_CONNECTION}" ]; then
+	/home/${USER}/bin/inhibit_idle &
+fi
+
