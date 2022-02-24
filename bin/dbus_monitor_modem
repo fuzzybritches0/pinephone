@@ -45,7 +45,7 @@ save_message() {
 		if [ "${count}" -eq "${timestampP}" ]; then
 			timestamp="${line:13}r"
 			mv "${smsdir}/${number}/tmpfile" "${smsdir}/${number}/${timestamp}"
-			ln -sf ${smsdir}/${number}/${timestamp} ${smsdir}/new/${timestamp}_${number}
+			ln -sf "${smsdir}/${number}/${timestamp}" "${smsdir}/new/${timestamp}_${number}"
 		fi
 		(( count++ ))
 	done

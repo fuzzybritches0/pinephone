@@ -1,16 +1,5 @@
 #!/bin/bash
 
-count=0
-while true; do
-	[ "$(ls /run/user/${UID} | grep sway-ipc.${UID}.)" ] && break
-	((count++))
-	((count >= 10)) && exit 0
-	sleep 1s
-done
-
-[ ! "${SWAYSOCK}" ] && export SWAYSOCK=$(ls /run/user/${UID}/sway-ipc.${UID}.*.sock)
-[ ! "${WAYLAND_DISPLAY}" ] && export WAYLAND_DISPLAY="$(basename /run/user/${UID}/wayland-?)"
-
 while true; do
 	wtype -M alt -M shift -M ctrl w
 	sleep 10s
