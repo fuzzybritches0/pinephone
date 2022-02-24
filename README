@@ -59,7 +59,9 @@ the following lines at the end of your .bashrc (note the path to
 inhibit_idle may differ in your case). (turn off the screen by pressing
 the power button):
 
-if [ "${SSH_CONNECTION}" ]; then
+if [ "${SSH_CONNECTION}" ] && [ "$(ls /run/user/${UID} | grep sway-ipc.${UID}.)" ]; then
+	export SWAYSOCK=$(ls /run/user/${UID}/sway-ipc.${UID}.*.sock)
+	export WAYLAND_DISPLAY="$(basename /run/user/${UID}/wayland-?)"
 	/home/${USER}/bin/inhibit_idle &
 fi
 
