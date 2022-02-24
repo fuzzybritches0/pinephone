@@ -1,8 +1,5 @@
 #!/bin/bash
 
-smsdir="${HOME}/SMS"
-[ ! -d "${smsdir}" ] && mkdir -p "${smsdir}/new"
-
 failed() {
 	echo "FAILED ${1}"
 	exit 1
@@ -19,8 +16,8 @@ new() {
 		if [ "${link}" != "${smsdir}/new/*" ]; then
 			(( count++ ))
 			linkb=$(basename "${link}")
-			echo "sender:"
-			contact find "${linkb:27}"
+			echo "sender: ${linkb:27}"
+			contact getname "${linkb:27}"
 			echo "date: $(date -d ${linkb:0:25})"
 			echo -n "text: "
 			cat "${link}"
@@ -29,6 +26,8 @@ new() {
 		fi
 	done
 	[ "${count}" -eq "0" ] && echo "no new messages!" && echo
+	brightnessctl -q -d green:indicator set 0 > /dev/null &2>1
+	exit 0
 }
 
 send() {
@@ -43,9 +42,9 @@ send() {
 }
 
 list() {
+	[ ! -d "${smsdir}/${1}" ] && failed "contact not found"
 	echo -n "${1} "
 	contact getname ${1}
-	[ ! -d "${smsdir}/${1}" ] && failed "contact not found"
 	[ -d "${smsdir}/${1}" ] && for message in ${smsdir}/${1}/*; do
 		echo
 		date=$(basename ${message})
@@ -68,10 +67,8 @@ help() {
 	exit 0
 }
 
-[ "${1}" != "new" ] && [ "${1}" != "send" ] && [ "${1}" != "list" ] && [ "${1}" != "help" ] \
-	&& [ "${1}" ] && failed "allowed options: [new, send, list, help]"
-
-[ "${1}" == "help" ] && help
+smsdir="${HOME}/SMS"
+[ ! -d "${smsdir}" ] && mkdir -p "${smsdir}/new"
 
 [ "${1}" == "new" ] || [ "${1}" == "" ] && new
 
@@ -80,6 +77,7 @@ if [ "${1}" == "list" ]; then
 	num=$(contact getphone "${2}")
 	[ ! "${num}" ] && num="${2}"
 	list ${num}
+	exit 0
 fi
 
 if [ "${1}" == "send" ]; then
@@ -88,7 +86,8 @@ if [ "${1}" == "send" ]; then
 	(( a= a + 6 ))
 	A="${@}"
 	send "${2}" "${A:${a}}"
+	exit 0
 fi
 
-[ ! "$( ls "${smsdir}/new")" ] && brightnessctl -q -d green:indicator set 0 > /dev/null
+help
 exit 0

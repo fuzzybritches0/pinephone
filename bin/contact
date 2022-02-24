@@ -1,6 +1,4 @@
 #!/bin/bash
-contact_dir="${HOME}/CONTACT"
-[ ! -d "${contact_dir}" ] && mkdir -p "${contact_dir}"
 
 show_contact() {
 	if [ ! "$( echo "${2}" | grep " ${1} ")" ]; then
@@ -79,7 +77,6 @@ get_phone() {
 			fi
 		fi
 	done
-	echo "${1}"
 	exit 0
 }
 
@@ -93,19 +90,21 @@ get_name() {
 			fi
 		fi
 	done
-	echo "${1}"
 	exit 0
 }
 
+contact_dir="${HOME}/CONTACT"
+[ ! -d "${contact_dir}" ] && mkdir -p "${contact_dir}"
 
 [ "${1}" == "add" ] && add_contact
 [ "${1}" == "find" ] && find_contact ${2}
 [ "${1}" == "list" ] && list_contacts
 [ "${1}" == "getphone" ] && [ "${2}" ] && get_phone "${2}"
-[ "${1}" == "getname" ] && get_name "${2}"
+[ "${1}" == "getname" ] && [ "${2}" ] && get_name "${2}"
 
 echo "contact help"
 echo
 echo "add a new contact:     ${0} add"
 echo "find a contact entry:  ${0} find nickname/name/phonenumber"
 echo "list contacts:         ${0} list"
+exit 0
