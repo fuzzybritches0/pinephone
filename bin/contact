@@ -31,7 +31,7 @@ add_contact() {
 	exit 0
 }
 
-list_contact() {
+list_contacts() {
 	echo
 	for contact in "${contact_dir}"/*; do
 		if [ "${contact}" != "${contact_dir}/*" ]; then
@@ -43,38 +43,25 @@ list_contact() {
 }
 
 find_contact() {
-	found=" "
 	echo
 	for contact in "${contact_dir}"/*; do
 		if [ "${contact}" != "${contact_dir}/*" ]; then
+			phone=$(cat "${contact}/phone")
+			name=$(cat "${contact}/name")
 			contact=$(basename ${contact})
 			if [ "$( echo "${contact}" | grep "${1}" )" ]; then
 				show_contact ${contact} "${found}"
-				found="${found} ${contact}"
-			fi
-		fi
-	done
-	for contact in "${contact_dir}"/*; do
-		if [ "${contact}" != "${contact_dir}/*" ]; then
-			name=$(cat "${contact}/name")
-			contact=$(basename ${contact})
-			if [ "$(echo "${name,,}" | grep "${1,,}")" ]; then
+				found=1
+			elif [ "$(echo "${name,,}" | grep "${1,,}")" ]; then
 				show_contact ${contact} "${found}"
-				found="${found} ${contact}"
-			fi
-		fi
-	done
-	for contact in "${contact_dir}"/*; do
-		if [ "${contact}" != "${contact_dir}/*" ]; then
-			phone=$(cat "${contact}/phone")
-			contact=$(basename ${contact})
-			if [ "${phone}" == "${1}" ]; then
+				found=1
+			elif [ "${phone}" == "${1}" ]; then
 				show_contact ${contact} "${found}"
-				found="${found} ${contact}"
+				found=1
 			fi
 		fi
 	done
-	[ "${found}" == " " ] && echo "not found"
+	[ ! "${found}" ] && echo "${1}"
 	exit 0
 }
 
@@ -113,7 +100,7 @@ get_name() {
 
 [ "${1}" == "add" ] && add_contact
 [ "${1}" == "find" ] && find_contact ${2}
-[ "${1}" == "list" ] && list_contact
+[ "${1}" == "list" ] && list_contacts
 [ "${1}" == "getphone" ] && [ "${2}" ] && get_phone "${2}"
 [ "${1}" == "getname" ] && get_name "${2}"
 

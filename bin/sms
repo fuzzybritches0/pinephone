@@ -19,11 +19,13 @@ new() {
 		if [ "${link}" != "${smsdir}/new/*" ]; then
 			(( count++ ))
 			linkb=$(basename "${link}")
-			echo "sender: ${linkb:27} date: $(date -d ${linkb:0:25})"
+			echo "sender:"
+			contact find "${linkb:27}"
+			echo "date: $(date -d ${linkb:0:25})"
 			echo -n "text: "
 			cat "${link}"
 			rm "${link}"
-			echo
+			echo "---"
 		fi
 	done
 	[ "${count}" -eq "0" ] && echo "no new messages!" && echo
