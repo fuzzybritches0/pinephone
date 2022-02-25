@@ -42,16 +42,18 @@ send() {
 }
 
 list() {
-	[ ! -d "${smsdir}/${1}" ] && failed "contact not found"
+	name="$(contact getname "${1}")"
+	[ ! "${name}" ] && name="${1}"
+	[ ! -d "${smsdir}/${1}" ] && failed "no messages found for ${name}"
 	echo -n "${1} "
 	contact getname ${1}
-	[ -d "${smsdir}/${1}" ] && for message in ${smsdir}/${1}/*; do
+	[ -d "${smsdir}/${1}" ] && for message in "${smsdir}/${1}"/*; do
 		echo
-		date=$(basename ${message})
+		date=$(basename "${message}")
 		[ "${date:25:1}" == "s" ] && echo -n "SENT "
 		[ "${date:25:1}" == "r" ] && echo -n "RECEIVED "
 		echo "$(date -d ${date::-1}) "
-		cat ${message}
+		cat "${message}"
 	done
 	echo
 }
@@ -74,9 +76,9 @@ smsdir="${HOME}/SMS"
 
 if [ "${1}" == "list" ]; then
 	[ ! "${2}" ] && failed "provide contact"
-	num=$(contact getphone "${2}")
+	num="$(contact getphone "${2}")"
 	[ ! "${num}" ] && num="${2}"
-	list ${num}
+	list "${num}"
 	exit 0
 fi
 
